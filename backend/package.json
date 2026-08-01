@@ -1,0 +1,19 @@
+{
+  "name": "reward-points-system-backend",
+  "version": "1.0.0",
+  "description": "Backend server for Smart Reward Point Management and Redemption System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.23.2",
+    "uuid": "^9.0.1"
+  }
+}

@@ -1,0 +1,453 @@
+{
+  "users": [
+    {
+      "id": "a1111111-1111-1111-1111-111111111111",
+      "name": "Dr. Sarah Jenkins (Dean)",
+      "email": "admin@college.edu",
+      "passwordHash": "$2a$10$7LhwkafEqgRiuKsxDm5n/OkmRcxLCfotLXf2AsXokG.CGzgVWwFy.",
+      "role": "admin",
+      "createdAt": "2026-07-31T09:29:05.018Z"
+    },
+    {
+      "id": "f1111111-1111-1111-1111-111111111111",
+      "name": "Dr. Robert Vance (PS Lead)",
+      "email": "faculty.ps@college.edu",
+      "passwordHash": "$2a$10$kphXVbqZrktpOO3VlGDzOeUEbHL0yXQV/4eTkhZtKMDSyEnw/7Qsy",
+      "role": "faculty",
+      "facultyResponsibility": "ps",
+      "createdAt": "2026-07-31T09:29:05.018Z"
+    },
+    {
+      "id": "f2222222-2222-2222-2222-222222222222",
+      "name": "Prof. Elena Rostova (Hackathon Lead)",
+      "email": "faculty.hackathon@college.edu",
+      "passwordHash": "$2a$10$kphXVbqZrktpOO3VlGDzOeUEbHL0yXQV/4eTkhZtKMDSyEnw/7Qsy",
+      "role": "faculty",
+      "facultyResponsibility": "hackathon",
+      "createdAt": "2026-07-31T09:29:05.018Z"
+    },
+    {
+      "id": "f3333333-3333-3333-3333-333333333333",
+      "name": "Dr. Marcus Chen (Certifications Lead)",
+      "email": "faculty.cert@college.edu",
+      "passwordHash": "$2a$10$kphXVbqZrktpOO3VlGDzOeUEbHL0yXQV/4eTkhZtKMDSyEnw/7Qsy",
+      "role": "faculty",
+      "facultyResponsibility": "certifications",
+      "createdAt": "2026-07-31T09:29:05.018Z"
+    },
+    {
+      "id": "s0000001-0000-0000-0000-000000000001",
+      "name": "Aarav Sharma",
+      "email": "s1@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "3rd Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000002-0000-0000-0000-000000000002",
+      "name": "Bhavya Patel",
+      "email": "s2@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "4th Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000003-0000-0000-0000-000000000003",
+      "name": "Chirag Reddy",
+      "email": "s3@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "2nd Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000004-0000-0000-0000-000000000004",
+      "name": "Divya Nair",
+      "email": "s4@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "3rd Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000005-0000-0000-0000-000000000005",
+      "name": "Eshaan Gupta",
+      "email": "s5@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "1st Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000006-0000-0000-0000-000000000006",
+      "name": "Farhan Khan",
+      "email": "s6@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "4th Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000007-0000-0000-0000-000000000007",
+      "name": "Gauri Verma",
+      "email": "s7@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "2nd Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000008-0000-0000-0000-000000000008",
+      "name": "Harsh Joshi",
+      "email": "s8@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "3rd Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000009-0000-0000-0000-000000000009",
+      "name": "Isha Malhotra",
+      "email": "s9@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "1st Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "s0000010-0000-0000-0000-000000000010",
+      "name": "Jai Deshmukh",
+      "email": "s10@college.edu",
+      "passwordHash": "$2a$10$S1sCLqP.Lj70/uctW74S1e/JTgWatS7o2nLKDOaL5yjBzTL3J8oSu",
+      "role": "student",
+      "year": "4th Year",
+      "createdAt": "2026-07-31T09:29:05.000Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "act11111-1111-1111-1111-111111111111",
+      "title": "National College Hackathon 2026",
+      "description": "Participated in or won a position in the 24-hour coding hackathon.",
+      "rpValue": 120,
+      "category": "hackathon",
+      "createdBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-16T09:29:05.185Z"
+    },
+    {
+      "id": "act22222-2222-2222-2222-222222222222",
+      "title": "AWS Cloud Practitioner Certification",
+      "description": "Obtained official cloud practitioner credential from Amazon Web Services.",
+      "rpValue": 150,
+      "category": "certifications",
+      "createdBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-21T09:29:05.185Z"
+    },
+    {
+      "id": "act33333-3333-3333-3333-333333333333",
+      "title": "LeetCode 50 Problems Milestone",
+      "description": "Successfully solved 50+ medium/hard problem solving assessment challenges.",
+      "rpValue": 100,
+      "category": "ps",
+      "createdBy": "f1111111-1111-1111-1111-111111111111",
+      "createdAt": "2026-07-26T09:29:05.185Z"
+    },
+    {
+      "id": "act44444-4444-4444-4444-444444444444",
+      "title": "NPTEL Online Certification Course",
+      "description": "Completed 12-week NPTEL course with Elite certificate.",
+      "rpValue": 80,
+      "category": "certifications",
+      "createdBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-29T09:29:05.185Z"
+    }
+  ],
+  "rpHistory": [
+    {
+      "id": "rph-s1-1",
+      "studentId": "s0000001-0000-0000-0000-000000000001",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s1-2",
+      "studentId": "s0000001-0000-0000-0000-000000000001",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 50,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s2-1",
+      "studentId": "s0000002-0000-0000-0000-000000000002",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s2-2",
+      "studentId": "s0000002-0000-0000-0000-000000000002",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 150,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s3-1",
+      "studentId": "s0000003-0000-0000-0000-000000000003",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s4-1",
+      "studentId": "s0000004-0000-0000-0000-000000000004",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s4-2",
+      "studentId": "s0000004-0000-0000-0000-000000000004",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 110,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s5-1",
+      "studentId": "s0000005-0000-0000-0000-000000000005",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s6-1",
+      "studentId": "s0000006-0000-0000-0000-000000000006",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s6-2",
+      "studentId": "s0000006-0000-0000-0000-000000000006",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 80,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s7-1",
+      "studentId": "s0000007-0000-0000-0000-000000000007",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s7-2",
+      "studentId": "s0000007-0000-0000-0000-000000000007",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 30,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s8-1",
+      "studentId": "s0000008-0000-0000-0000-000000000008",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s8-2",
+      "studentId": "s0000008-0000-0000-0000-000000000008",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 180,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s9-1",
+      "studentId": "s0000009-0000-0000-0000-000000000009",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s10-1",
+      "studentId": "s0000010-0000-0000-0000-000000000010",
+      "activityId": "act11111-1111-1111-1111-111111111111",
+      "points": 120,
+      "description": "Completed National College Hackathon 2026",
+      "type": "earned",
+      "allocatedBy": "f2222222-2222-2222-2222-222222222222",
+      "createdAt": "2026-07-17T09:29:05.000Z"
+    },
+    {
+      "id": "rph-s10-2",
+      "studentId": "s0000010-0000-0000-0000-000000000010",
+      "activityId": "act22222-2222-2222-2222-222222222222",
+      "points": 230,
+      "description": "AWS Cloud Practitioner Certification",
+      "type": "earned",
+      "allocatedBy": "f3333333-3333-3333-3333-333333333333",
+      "createdAt": "2026-07-22T09:29:05.000Z"
+    }
+  ],
+  "queries": [
+    {
+      "id": "q-s1",
+      "studentId": "s0000001-0000-0000-0000-000000000001",
+      "category": "ps",
+      "subject": "PS Query from S1",
+      "message": "Hi Faculty, please verify my ps submission and expected points.",
+      "status": "resolved",
+      "response": "Verified and points allocated successfully.",
+      "respondedBy": "f1111111-1111-1111-1111-111111111111",
+      "createdAt": "2026-07-30T09:29:05.000Z",
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "q-s3",
+      "studentId": "s0000003-0000-0000-0000-000000000003",
+      "category": "certifications",
+      "subject": "CERTIFICATIONS Query from S3",
+      "message": "Hi Faculty, please verify my certifications submission and expected points.",
+      "status": "pending",
+      "response": null,
+      "respondedBy": null,
+      "createdAt": "2026-07-30T09:29:05.000Z",
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "q-s5",
+      "studentId": "s0000005-0000-0000-0000-000000000005",
+      "category": "hackathon",
+      "subject": "HACKATHON Query from S5",
+      "message": "Hi Faculty, please verify my hackathon submission and expected points.",
+      "status": "pending",
+      "response": null,
+      "respondedBy": null,
+      "createdAt": "2026-07-30T09:29:05.000Z",
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "q-s7",
+      "studentId": "s0000007-0000-0000-0000-000000000007",
+      "category": "ps",
+      "subject": "PS Query from S7",
+      "message": "Hi Faculty, please verify my ps submission and expected points.",
+      "status": "pending",
+      "response": null,
+      "respondedBy": null,
+      "createdAt": "2026-07-30T09:29:05.000Z",
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "id": "q-s9",
+      "studentId": "s0000009-0000-0000-0000-000000000009",
+      "category": "certifications",
+      "subject": "CERTIFICATIONS Query from S9",
+      "message": "Hi Faculty, please verify my certifications submission and expected points.",
+      "status": "pending",
+      "response": null,
+      "respondedBy": null,
+      "createdAt": "2026-07-30T09:29:05.000Z",
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    }
+  ],
+  "studentMarks": [
+    {
+      "studentId": "s0000001-0000-0000-0000-000000000001",
+      "internalMarks": 78,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000002-0000-0000-0000-000000000002",
+      "internalMarks": 85,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000003-0000-0000-0000-000000000003",
+      "internalMarks": 65,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000004-0000-0000-0000-000000000004",
+      "internalMarks": 92,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000005-0000-0000-0000-000000000005",
+      "internalMarks": 80,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000006-0000-0000-0000-000000000006",
+      "internalMarks": 88,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000007-0000-0000-0000-000000000007",
+      "internalMarks": 74,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000008-0000-0000-0000-000000000008",
+      "internalMarks": 90,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000009-0000-0000-0000-000000000009",
+      "internalMarks": 82,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    },
+    {
+      "studentId": "s0000010-0000-0000-0000-000000000010",
+      "internalMarks": 95,
+      "updatedAt": "2026-07-31T09:29:05.000Z"
+    }
+  ]
+}
