@@ -1,3 +1,5 @@
+DEPLOYMENT LINK : https://doom-developers-tech-nova-hackathon-nu.vercel.app/
+
 # 🎓 Academic Reward Points & Student Performance Management System
 
 A state-of-the-art, full-stack web application designed for higher education institutions to incentivize, track, and evaluate student academic achievements, problem-solving progress, hackathon participation, and industry certifications using a **Reward Points (RP)** system scaled directly into **Internal Academic Marks (out of 11)**.
