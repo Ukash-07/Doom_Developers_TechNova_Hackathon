@@ -9,7 +9,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'smart_rewards',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ssl: (process.env.DB_HOST && !process.env.DB_HOST.includes('127.0.0.1') && !process.env.DB_HOST.includes('localhost')) ? { rejectUnauthorized: false } : false
 });
 
 module.exports = pool;

@@ -19,7 +19,8 @@ async function run() {
     host,
     port,
     user,
-    password
+    password,
+    ssl: (host && !host.includes('127.0.0.1') && !host.includes('localhost')) ? { rejectUnauthorized: false } : false
   });
 
   try {
