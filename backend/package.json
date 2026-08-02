@@ -4,7 +4,7 @@
   "description": "Backend server for Smart Reward Point Management and Redemption System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/setupDb.js && node server.js",
     "dev": "node server.js"
   },
   "dependencies": {
