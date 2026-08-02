@@ -1,18 +1,9 @@
 {
   "version": 2,
-  "services": {
-    "frontend": {
-      "root": "frontend",
-      "framework": "vite"
-    },
-    "backend": {
-      "root": "backend"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "https://smart-rewards-backend.onrender.com/api/$1"
     }
   ]
 }
