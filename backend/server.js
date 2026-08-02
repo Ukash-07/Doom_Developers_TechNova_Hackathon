@@ -32,11 +32,23 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Smart Reward Point Management API is running' });
 });
 
+const setupDb = require('./scripts/setupDb');
+
 // Start the server (if run directly)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+  setupDb()
+    .then(() => {
+      console.log('Database setup complete. Starting HTTP server...');
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Database setup warning:', err);
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    });
 }
 
 module.exports = app;
