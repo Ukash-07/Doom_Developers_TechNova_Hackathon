@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 import {
   ShieldCheck, BookOpen, Users, MessageSquare, Plus, Award,
-  Send, Edit, CheckCircle, Clock, Cpu, Trophy, BadgeCheck, FileCheck, ExternalLink, Check, X
+  Send, Edit, CheckCircle, Clock, Cpu, Trophy, BadgeCheck, FileCheck, ExternalLink, Check, X, Search, Filter
 } from 'lucide-react';
 
 // Map responsibility to display labels and theme color
@@ -54,6 +54,11 @@ export default function FacultyDashboard() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editingMarksId, setEditingMarksId] = useState(null);
   const [newBaseMarks, setNewBaseMarks] = useState('');
+
+  // Roster Filter & Search States
+  const [rosterSearchQuery, setRosterSearchQuery] = useState('');
+  const [rpFilterMode, setRpFilterMode] = useState('all'); // 'all' | 'lessThan' | 'greaterThan'
+  const [maxRpThreshold, setMaxRpThreshold] = useState('');
 
   // Activity form
   const [actTitle, setActTitle] = useState('');
@@ -632,6 +637,81 @@ export default function FacultyDashboard() {
                 </div>
               ) : (
                 <div className="glass-panel">
+                  {/* Search and Filter Control Bar */}
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '16px',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px',
+                    background: 'rgba(0, 0, 0, 0.02)',
+                    border: '1px solid var(--border-glass)',
+                    borderRadius: '12px',
+                    padding: '16px'
+                  }}>
+                    {/* Left: Search input for Name / Roll No */}
+                    <div style={{ flex: '1 1 280px', display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+                      <Search size={18} style={{ color: 'var(--text-muted)', position: 'absolute', left: '12px' }} />
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Search by Name, Roll No, or Email..."
+                        value={rosterSearchQuery}
+                        onChange={e => setRosterSearchQuery(e.target.value)}
+                        style={{ paddingLeft: '38px', fontSize: '0.88rem', width: '100%' }}
+                      />
+                    </div>
+
+                    {/* Right: RP Filter Dropdown & Threshold Input */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          RP Filter:
+                        </label>
+                        <select
+                          className="form-select"
+                          value={rpFilterMode}
+                          onChange={e => setRpFilterMode(e.target.value)}
+                          style={{ fontSize: '0.85rem', padding: '8px 12px', width: 'auto', background: '#ffffff', color: '#0f172a' }}
+                        >
+                          <option value="all">All Students</option>
+                          <option value="lessThan">Reward Points Less Than (&lt;)</option>
+                          <option value="greaterThan">Reward Points &ge;</option>
+                        </select>
+                      </div>
+
+                      {rpFilterMode !== 'all' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            Limit:
+                          </label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            placeholder="e.g. 50"
+                            value={maxRpThreshold}
+                            onChange={e => setMaxRpThreshold(e.target.value)}
+                            style={{ width: '90px', padding: '8px 12px', fontSize: '0.85rem' }}
+                          />
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>RP</span>
+                        </div>
+                      )}
+
+                      {(rosterSearchQuery || rpFilterMode !== 'all' || maxRpThreshold !== '') && (
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          onClick={() => { setRosterSearchQuery(''); setRpFilterMode('all'); setMaxRpThreshold(''); }}
+                          style={{ padding: '7px 12px', fontSize: '0.78rem', border: '1px solid #cbd5e1' }}
+                        >
+                          Clear Filters
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="table-container">
                     <table className="data-table">
                       <thead>
@@ -646,50 +726,95 @@ export default function FacultyDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {students.map(s => (
-                          <tr key={s.studentId}>
-                            <td>
-                              <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.95rem' }}>
-                                {s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim()}
-                              </div>
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>#{s.rank}</span>
-                                <span className={`badge-ui badge-${s.badge.toLowerCase()}`}>{s.badge}</span>
-                              </div>
-                            </td>
-                            <td><span style={{ fontWeight: 700, color: cfg.color }}>{s.totalEarned} RP</span></td>
-                            <td><span style={{ fontWeight: 600 }}>{s.currentBalance} RP</span></td>
-                            <td>
-                              {editingMarksId === s.studentId ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <input type="number" className="form-input"
-                                    style={{ width: '60px', padding: '4px 8px', fontSize: '0.85rem' }}
-                                    value={newBaseMarks} onChange={e => setNewBaseMarks(e.target.value)} />
-                                  <button className="btn btn-primary"
-                                    style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                                    onClick={() => handleSaveMarks(s.studentId)}>Save</button>
-                                </div>
-                              ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <span>{s.baseMarks} / 90</span>
-                                  <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                                    onClick={() => { setEditingMarksId(s.studentId); setNewBaseMarks(s.baseMarks); }}>
-                                    <Edit size={14} />
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                            <td><strong style={{ color: 'var(--color-success)' }}>{s.finalMarks} / 100</strong></td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                                onClick={() => handleViewStudent(s.studentId)}>
-                                View Report
-                              </button>
+                        {students.filter(s => {
+                          const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
+                          const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
+                          const q = rosterSearchQuery.toLowerCase().trim();
+
+                          const matchesSearch = !q || 
+                            studentName.toLowerCase().includes(q) || 
+                            s.email.toLowerCase().includes(q) || 
+                            rollCode.toLowerCase().includes(q);
+
+                          let matchesRp = true;
+                          if (rpFilterMode === 'lessThan' && maxRpThreshold !== '') {
+                            matchesRp = Number(s.currentBalance) < Number(maxRpThreshold);
+                          } else if (rpFilterMode === 'greaterThan' && maxRpThreshold !== '') {
+                            matchesRp = Number(s.currentBalance) >= Number(maxRpThreshold);
+                          }
+
+                          return matchesSearch && matchesRp;
+                        }).length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                              No student records match the selected search criteria or RP filter threshold.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          students.filter(s => {
+                            const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
+                            const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
+                            const q = rosterSearchQuery.toLowerCase().trim();
+
+                            const matchesSearch = !q || 
+                              studentName.toLowerCase().includes(q) || 
+                              s.email.toLowerCase().includes(q) || 
+                              rollCode.toLowerCase().includes(q);
+
+                            let matchesRp = true;
+                            if (rpFilterMode === 'lessThan' && maxRpThreshold !== '') {
+                              matchesRp = Number(s.currentBalance) < Number(maxRpThreshold);
+                            } else if (rpFilterMode === 'greaterThan' && maxRpThreshold !== '') {
+                              matchesRp = Number(s.currentBalance) >= Number(maxRpThreshold);
+                            }
+
+                            return matchesSearch && matchesRp;
+                          }).map(s => (
+                            <tr key={s.studentId}>
+                              <td>
+                                <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.95rem' }}>
+                                  {s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim()}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.email}</div>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>#{s.rank}</span>
+                                  <span className={`badge-ui badge-${s.badge.toLowerCase()}`}>{s.badge}</span>
+                                </div>
+                              </td>
+                              <td><span style={{ fontWeight: 700, color: cfg.color }}>{s.totalEarned} RP</span></td>
+                              <td><span style={{ fontWeight: 600 }}>{s.currentBalance} RP</span></td>
+                              <td>
+                                {editingMarksId === s.studentId ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <input type="number" className="form-input"
+                                      style={{ width: '60px', padding: '4px 8px', fontSize: '0.85rem' }}
+                                      value={newBaseMarks} onChange={e => setNewBaseMarks(e.target.value)} />
+                                    <button className="btn btn-primary"
+                                      style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                                      onClick={() => handleSaveMarks(s.studentId)}>Save</button>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span>{s.baseMarks} / 90</span>
+                                    <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                                      onClick={() => { setEditingMarksId(s.studentId); setNewBaseMarks(s.baseMarks); }}>
+                                      <Edit size={14} />
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                              <td><strong style={{ color: 'var(--color-success)' }}>{s.finalMarks} / 100</strong></td>
+                              <td style={{ textAlign: 'right' }}>
+                                <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                  onClick={() => handleViewStudent(s.studentId)}>
+                                  View Report
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>

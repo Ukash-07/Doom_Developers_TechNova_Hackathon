@@ -4,7 +4,7 @@ import Toast from '../components/Toast';
 import * as XLSX from 'xlsx';
 import { 
   ShieldAlert, BookOpen, Users, MessageSquare, Plus, Award, 
-  Send, Bell, Settings, Edit, UserCheck, Clock, CheckCircle, UserPlus, Cpu, Trophy, BadgeCheck, Download, FileText, FileCheck, ExternalLink, Check, X, UploadCloud, FileSpreadsheet
+  Send, Bell, Settings, Edit, UserCheck, Clock, CheckCircle, UserPlus, Cpu, Trophy, BadgeCheck, Download, FileText, FileCheck, ExternalLink, Check, X, UploadCloud, FileSpreadsheet, Trash2, UserX, Search, Filter
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -13,6 +13,11 @@ export default function AdminDashboard() {
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Roster Filter & Search States
+  const [rosterSearchQuery, setRosterSearchQuery] = useState('');
+  const [rpFilterMode, setRpFilterMode] = useState('all'); // 'all' | 'lessThan' | 'greaterThan'
+  const [maxRpThreshold, setMaxRpThreshold] = useState('');
 
   // Data lists
   const [students, setStudents] = useState([]);
@@ -265,7 +270,7 @@ export default function AdminDashboard() {
 
   const [respondingToQuery, setRespondingToQuery] = useState(false);
 
-  // 4. User Management (create faculty/student)
+  // 4. User Management (create/remove faculty/student)
   const [faculties, setFaculties] = useState([]);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
@@ -274,6 +279,35 @@ export default function AdminDashboard() {
   const [newUserYear, setNewUserYear] = useState('1st Year');
   const [newUserResponsibility, setNewUserResponsibility] = useState('ps');
   const [creatingUser, setCreatingUser] = useState(false);
+
+  // Deletion modal state
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(false);
+  const [userMgmtTab, setUserMgmtTab] = useState('faculty'); // 'faculty' | 'student'
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+
+  const handleConfirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeletingUser(true);
+    try {
+      const res = await fetch(`/api/auth/users/${userToDelete.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'User account removed successfully!', 'success');
+        setUserToDelete(null);
+        fetchAdminData();
+      } else {
+        showToast(data.message || 'Failed to remove user account', 'error');
+      }
+    } catch (err) {
+      showToast('Network error while removing user account', 'error');
+    } finally {
+      setDeletingUser(false);
+    }
+  };
 
   const showToast = (msg, type = 'info') => {
     setToast({ message: msg, type });
@@ -1322,6 +1356,81 @@ export default function AdminDashboard() {
                   <h3>Registered Students</h3>
                 </div>
 
+                {/* Search and Filter Control Bar */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  marginBottom: '20px',
+                  background: 'rgba(0, 0, 0, 0.02)',
+                  border: '1px solid var(--border-glass)',
+                  borderRadius: '12px',
+                  padding: '16px'
+                }}>
+                  {/* Left: Search input for Name / Roll No */}
+                  <div style={{ flex: '1 1 280px', display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+                    <Search size={18} style={{ color: 'var(--text-muted)', position: 'absolute', left: '12px' }} />
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Search by Name, Roll No, or Email..."
+                      value={rosterSearchQuery}
+                      onChange={e => setRosterSearchQuery(e.target.value)}
+                      style={{ paddingLeft: '38px', fontSize: '0.88rem', width: '100%' }}
+                    />
+                  </div>
+
+                  {/* Right: RP Filter Dropdown & Threshold Input */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        RP Filter:
+                      </label>
+                      <select
+                        className="form-select"
+                        value={rpFilterMode}
+                        onChange={e => setRpFilterMode(e.target.value)}
+                        style={{ fontSize: '0.85rem', padding: '8px 12px', width: 'auto', background: '#ffffff', color: '#0f172a' }}
+                      >
+                        <option value="all">All Students</option>
+                        <option value="lessThan">Reward Points Less Than (&lt;)</option>
+                        <option value="greaterThan">Reward Points &ge;</option>
+                      </select>
+                    </div>
+
+                    {rpFilterMode !== 'all' && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          Limit:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          placeholder="e.g. 50"
+                          value={maxRpThreshold}
+                          onChange={e => setMaxRpThreshold(e.target.value)}
+                          style={{ width: '90px', padding: '8px 12px', fontSize: '0.85rem' }}
+                        />
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>RP</span>
+                      </div>
+                    )}
+
+                    {(rosterSearchQuery || rpFilterMode !== 'all' || maxRpThreshold !== '') && (
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => { setRosterSearchQuery(''); setRpFilterMode('all'); setMaxRpThreshold(''); }}
+                        style={{ padding: '7px 12px', fontSize: '0.78rem', border: '1px solid #cbd5e1' }}
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="table-container">
                   <table className="data-table">
                     <thead>
@@ -1335,59 +1444,126 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {students.map(s => {
+                      {students.filter(s => {
                         const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
+                        const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
+                        const q = rosterSearchQuery.toLowerCase().trim();
 
-                        return (
-                          <tr key={s.studentId}>
-                            <td>
-                              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: s.rank <= 3 ? '#0284c7' : 'var(--text-bright)' }}>
-                                #{s.rank}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ 
-                                fontFamily: 'Outfit, monospace', 
-                                fontWeight: 700, 
-                                fontSize: '0.85rem', 
-                                color: '#0284c7', 
-                                background: 'rgba(2, 132, 199, 0.08)', 
-                                border: '1px solid rgba(2, 132, 199, 0.2)',
-                                padding: '3px 8px', 
-                                borderRadius: '6px' 
-                              }}>
-                                {rollCode}
-                              </span>
-                            </td>
-                            <td>
-                              <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.95rem' }}>
-                                {s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim()}
-                              </div>
-                            </td>
-                            <td>
-                              <div style={{ fontWeight: 800, color: '#0284c7', fontSize: '0.95rem' }}>
-                                {s.currentBalance} RP
-                              </div>
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <strong style={{ fontSize: '1.05rem', color: '#059669', fontWeight: 800 }}>
-                                  {s.rpBonus !== undefined ? s.rpBonus : (s.currentBalance > 0 ? 11 : 0)} / 11
-                                </strong>
-                              </div>
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button 
-                                className="btn btn-outline"
-                                style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                                onClick={() => handleViewStudentDetails(s.studentId)}
-                              >
-                                View Report
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                        const matchesSearch = !q || 
+                          studentName.toLowerCase().includes(q) || 
+                          s.email.toLowerCase().includes(q) || 
+                          rollCode.toLowerCase().includes(q);
+
+                        let matchesRp = true;
+                        if (rpFilterMode === 'lessThan' && maxRpThreshold !== '') {
+                          matchesRp = Number(s.currentBalance) < Number(maxRpThreshold);
+                        } else if (rpFilterMode === 'greaterThan' && maxRpThreshold !== '') {
+                          matchesRp = Number(s.currentBalance) >= Number(maxRpThreshold);
+                        }
+
+                        return matchesSearch && matchesRp;
+                      }).length === 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                            No student records match the selected search criteria or RP filter threshold.
+                          </td>
+                        </tr>
+                      ) : (
+                        students.filter(s => {
+                          const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
+                          const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
+                          const q = rosterSearchQuery.toLowerCase().trim();
+
+                          const matchesSearch = !q || 
+                            studentName.toLowerCase().includes(q) || 
+                            s.email.toLowerCase().includes(q) || 
+                            rollCode.toLowerCase().includes(q);
+
+                          let matchesRp = true;
+                          if (rpFilterMode === 'lessThan' && maxRpThreshold !== '') {
+                            matchesRp = Number(s.currentBalance) < Number(maxRpThreshold);
+                          } else if (rpFilterMode === 'greaterThan' && maxRpThreshold !== '') {
+                            matchesRp = Number(s.currentBalance) >= Number(maxRpThreshold);
+                          }
+
+                          return matchesSearch && matchesRp;
+                        }).map(s => {
+                          const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
+
+                          return (
+                            <tr key={s.studentId}>
+                              <td>
+                                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: s.rank <= 3 ? '#0284c7' : 'var(--text-bright)' }}>
+                                  #{s.rank}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ 
+                                  fontFamily: 'Outfit, monospace', 
+                                  fontWeight: 700, 
+                                  fontSize: '0.85rem', 
+                                  color: '#0284c7', 
+                                  background: 'rgba(2, 132, 199, 0.08)', 
+                                  border: '1px solid rgba(2, 132, 199, 0.2)',
+                                  padding: '3px 8px', 
+                                  borderRadius: '6px' 
+                                }}>
+                                  {rollCode}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.95rem' }}>
+                                  {s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim()}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.email}</div>
+                              </td>
+                              <td>
+                                <div style={{ fontWeight: 800, color: '#0284c7', fontSize: '0.95rem' }}>
+                                  {s.currentBalance} RP
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <strong style={{ fontSize: '1.05rem', color: '#059669', fontWeight: 800 }}>
+                                    {s.rpBonus !== undefined ? s.rpBonus : (s.currentBalance > 0 ? 11 : 0)} / 11
+                                  </strong>
+                                </div>
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                  <button 
+                                    className="btn btn-outline"
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                    onClick={() => handleViewStudentDetails(s.studentId)}
+                                  >
+                                    View Report
+                                  </button>
+                                  <button 
+                                    className="btn"
+                                    style={{ 
+                                      padding: '6px 10px', 
+                                      fontSize: '0.8rem', 
+                                      background: 'rgba(239, 68, 68, 0.08)', 
+                                      color: '#ef4444', 
+                                      border: '1px solid rgba(239, 68, 68, 0.3)', 
+                                      borderRadius: '6px', 
+                                      cursor: 'pointer', 
+                                      display: 'inline-flex', 
+                                      alignItems: 'center', 
+                                      gap: '4px', 
+                                      fontWeight: 700 
+                                    }}
+                                    onClick={() => setUserToDelete({ id: s.studentId || s.id, name: s.name, email: s.email, role: 'student' })}
+                                  >
+                                    <Trash2 size={13} />
+                                    <span>Remove</span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1822,50 +1998,193 @@ export default function AdminDashboard() {
                 </form>
               </div>
 
-              {/* Faculty List */}
+              {/* Managed User Accounts List */}
               <div className="glass-panel">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                  <UserCheck size={20} style={{ color: '#8b5cf6' }} />
-                  <h3>Registered Faculty Members</h3>
-                </div>
-                {faculties.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No faculty accounts found.</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {faculties.map(f => {
-                      const respColors = { ps: '#00d2ff', hackathon: '#f59e0b', certifications: '#10b981' };
-                      const respLabels = { ps: 'PS Assessment', hackathon: 'Hackathons & Contests', certifications: 'Certifications & NPTEL' };
-                      const respIcons = { ps: <Cpu size={14} />, hackathon: <Trophy size={14} />, certifications: <BadgeCheck size={14} /> };
-                      const c = respColors[f.facultyResponsibility] || '#aaa';
-                      return (
-                        <div key={f.id} style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '14px 16px', borderRadius: '10px',
-                          background: `${c}08`, border: `1px solid ${c}25`,
-                          gap: '12px', flexWrap: 'wrap'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{
-                              width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
-                              background: `${c}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c, fontWeight: 700
-                            }}>
-                              {f.name[0]}
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 600, color: 'var(--text-bright)', fontSize: '0.9rem' }}>{f.name}</div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.email}</div>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px',
-                            padding: '4px 10px', borderRadius: '6px', background: `${c}18`, color: c,
-                            border: `1px solid ${c}33`, fontSize: '0.75rem', fontWeight: 700 }}>
-                            <span style={{ color: c }}>{respIcons[f.facultyResponsibility]}</span>
-                            {respLabels[f.facultyResponsibility] || f.facultyResponsibility}
-                          </div>
-                        </div>
-                      );
-                    })}
+                {/* Header & Sub-Tabs */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Users size={20} style={{ color: userMgmtTab === 'faculty' ? '#8b5cf6' : '#0284c7' }} />
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Registered User Accounts</h3>
                   </div>
+
+                  {/* Sub-tabs for Faculty vs Student */}
+                  <div style={{ display: 'flex', background: 'rgba(0,0,0,0.04)', borderRadius: '8px', padding: '3px', border: '1px solid var(--border-glass)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setUserMgmtTab('faculty')}
+                      style={{
+                        padding: '6px 14px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 700,
+                        border: 'none', cursor: 'pointer',
+                        background: userMgmtTab === 'faculty' ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'transparent',
+                        color: userMgmtTab === 'faculty' ? '#fff' : 'var(--text-muted)'
+                      }}
+                    >
+                      Faculty ({faculties.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserMgmtTab('student')}
+                      style={{
+                        padding: '6px 14px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 700,
+                        border: 'none', cursor: 'pointer',
+                        background: userMgmtTab === 'student' ? 'linear-gradient(135deg, var(--color-primary), #0088ff)' : 'transparent',
+                        color: userMgmtTab === 'student' ? '#fff' : 'var(--text-muted)'
+                      }}
+                    >
+                      Students ({students.length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter / Search Bar */}
+                <div style={{ marginBottom: '16px' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={`Filter ${userMgmtTab === 'faculty' ? 'faculty members' : 'students'} by name or email...`}
+                    value={userSearchQuery}
+                    onChange={e => setUserSearchQuery(e.target.value)}
+                    style={{ fontSize: '0.85rem', padding: '8px 12px' }}
+                  />
+                </div>
+
+                {/* Faculty List View */}
+                {userMgmtTab === 'faculty' && (
+                  <>
+                    {faculties.filter(f => !userSearchQuery || f.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || f.email.toLowerCase().includes(userSearchQuery.toLowerCase())).length === 0 ? (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '24px 0' }}>No matching faculty accounts found.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '520px', overflowY: 'auto' }}>
+                        {faculties.filter(f => !userSearchQuery || f.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || f.email.toLowerCase().includes(userSearchQuery.toLowerCase())).map(f => {
+                          const respColors = { ps: '#00d2ff', hackathon: '#f59e0b', certifications: '#10b981' };
+                          const respLabels = { ps: 'PS Assessment', hackathon: 'Hackathons & Contests', certifications: 'Certifications & NPTEL' };
+                          const respIcons = { ps: <Cpu size={14} />, hackathon: <Trophy size={14} />, certifications: <BadgeCheck size={14} /> };
+                          const c = respColors[f.facultyResponsibility] || '#aaa';
+                          return (
+                            <div key={f.id} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '12px 14px', borderRadius: '10px',
+                              background: `${c}08`, border: `1px solid ${c}25`,
+                              gap: '12px', flexWrap: 'wrap'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                  width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                                  background: `${c}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c, fontWeight: 700
+                                }}>
+                                  {f.name[0]}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.9rem' }}>{f.name}</div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.email}</div>
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                  display: 'flex', alignItems: 'center', gap: '6px',
+                                  padding: '4px 10px', borderRadius: '6px', background: `${c}18`, color: c,
+                                  border: `1px solid ${c}33`, fontSize: '0.75rem', fontWeight: 700
+                                }}>
+                                  <span style={{ color: c }}>{respIcons[f.facultyResponsibility]}</span>
+                                  {respLabels[f.facultyResponsibility] || f.facultyResponsibility}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  title="Remove Faculty Account"
+                                  onClick={() => setUserToDelete({ id: f.id, name: f.name, email: f.email, role: 'faculty' })}
+                                  style={{
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    color: '#ef4444',
+                                    background: 'rgba(239, 68, 68, 0.08)',
+                                    padding: '5px 10px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700
+                                  }}
+                                >
+                                  <Trash2 size={13} />
+                                  <span>Remove</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Student List View */}
+                {userMgmtTab === 'student' && (
+                  <>
+                    {students.filter(s => !userSearchQuery || s.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || s.email.toLowerCase().includes(userSearchQuery.toLowerCase())).length === 0 ? (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '24px 0' }}>No matching student accounts found.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '520px', overflowY: 'auto' }}>
+                        {students.filter(s => !userSearchQuery || s.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || s.email.toLowerCase().includes(userSearchQuery.toLowerCase())).map(s => {
+                          const studentDisplayName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
+                          return (
+                            <div key={s.studentId || s.id} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '12px 14px', borderRadius: '10px',
+                              background: 'rgba(2, 132, 199, 0.04)', border: '1px solid rgba(2, 132, 199, 0.15)',
+                              gap: '12px', flexWrap: 'wrap'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                  width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                                  background: 'rgba(2, 132, 199, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 700
+                                }}>
+                                  {studentDisplayName[0] || 'S'}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.9rem' }}>{studentDisplayName}</div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.email}</div>
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                  padding: '4px 10px', borderRadius: '6px', background: 'rgba(2, 132, 199, 0.1)',
+                                  color: '#0284c7', border: '1px solid rgba(2, 132, 199, 0.2)', fontSize: '0.75rem', fontWeight: 800
+                                }}>
+                                  {s.currentBalance} RP
+                                </div>
+
+                                <button
+                                  type="button"
+                                  title="Remove Student Account"
+                                  onClick={() => setUserToDelete({ id: s.studentId || s.id, name: studentDisplayName, email: s.email, role: 'student' })}
+                                  style={{
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    color: '#ef4444',
+                                    background: 'rgba(239, 68, 68, 0.08)',
+                                    padding: '5px 10px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700
+                                  }}
+                                >
+                                  <Trash2 size={13} />
+                                  <span>Remove</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -1874,6 +2193,63 @@ export default function AdminDashboard() {
 
         </div>
       </div>
+
+
+
+      {/* CONFIRMATION OVERLAY MODAL FOR USER DELETION */}
+      {userToDelete && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 99999, padding: '20px'
+        }}>
+          <div className="glass-panel animate-fade-in" style={{
+            width: '100%', maxWidth: '480px', background: '#ffffff',
+            border: '1.5px solid #fca5a5', boxShadow: '0 20px 50px rgba(239, 68, 68, 0.2)',
+            padding: '28px', borderRadius: '16px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <UserX size={24} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Remove User Account</h3>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '2px 0 0' }}>Confirm deletion of {userToDelete.role === 'faculty' ? 'Faculty' : 'Student'} record</p>
+              </div>
+            </div>
+
+            <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px' }}>
+              <p style={{ fontSize: '0.9rem', color: '#991b1b', margin: 0, fontWeight: 600 }}>
+                Are you sure you want to remove <span style={{ textDecoration: 'underline', fontWeight: 800 }}>{userToDelete.name}</span> ({userToDelete.email})?
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#b91c1c', marginTop: '6px', marginBottom: 0 }}>
+                This will permanently delete their account profile, login access, and associated data from the system.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-outline"
+                onClick={() => setUserToDelete(null)}
+                disabled={deletingUser}
+                style={{ padding: '9px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                onClick={handleConfirmDeleteUser}
+                disabled={deletingUser}
+                style={{ padding: '9px 20px', borderRadius: '8px', background: '#dc2626', color: '#fff', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              >
+                <Trash2 size={16} />
+                <span>{deletingUser ? 'Removing...' : 'Confirm Remove'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
 

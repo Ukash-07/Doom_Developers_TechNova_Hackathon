@@ -184,4 +184,33 @@ router.get('/faculties', auth, adminOnly, async (req, res) => {
   }
 });
 
+// Admin: Delete a user account (Faculty or Student)
+router.delete('/users/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (id === req.user.id) {
+      return res.status(400).json({ message: 'You cannot delete your own admin account' });
+    }
+
+    const targetUser = await db.findUserById(id);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User account not found' });
+    }
+
+    if (targetUser.role === 'admin') {
+      return res.status(400).json({ message: 'Admin accounts cannot be deleted through this panel' });
+    }
+
+    await db.deleteUser(id);
+
+    res.json({
+      message: `${targetUser.role === 'faculty' ? 'Faculty' : 'Student'} account (${targetUser.name}) removed successfully`
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Internal server error removing user account' });
+  }
+});
+
 module.exports = router;

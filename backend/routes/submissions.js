@@ -4,37 +4,12 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const { auth, adminOrFaculty } = require('../middleware/auth');
 
-// Create submission table dynamically if not present
-const initSubmissionsTable = async () => {
-  try {
-    const pool = require('../mysql');
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS submissions (
-        id VARCHAR(255) PRIMARY KEY,
-        activityId VARCHAR(255) NOT NULL,
-        studentId VARCHAR(255) NOT NULL,
-        submissionText TEXT NOT NULL,
-        status VARCHAR(50) DEFAULT 'pending',
-        feedback TEXT,
-        submittedAt VARCHAR(100),
-        updatedAt VARCHAR(100)
-      )
-    `);
-  } catch (err) {
-    console.error('Submissions table init error:', err);
-  }
-};
-initSubmissionsTable();
-
 // Get submissions (Students get their own; Faculty/Admin get all)
 router.get('/', auth, async (req, res) => {
   try {
-    const pool = require('../mysql');
-    let rows = [];
+    let rows = await db.getSubmissions();
     if (req.user.role === 'student') {
-      [rows] = await pool.query('SELECT * FROM submissions WHERE studentId = ? ORDER BY submittedAt DESC', [req.user.id]);
-    } else {
-      [rows] = await pool.query('SELECT * FROM submissions ORDER BY submittedAt DESC');
+      rows = rows.filter(s => s.studentId === req.user.id);
     }
 
     // Enrich with student name/email & activity details
@@ -78,22 +53,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Activity ID and document submission link/text are required' });
     }
 
-    const pool = require('../mysql');
-    
-    // Check if already submitted for this activity
-    const [existing] = await pool.query('SELECT * FROM submissions WHERE studentId = ? AND activityId = ?', [req.user.id, activityId]);
     const now = new Date().toISOString();
-
-    if (existing.length > 0) {
-      // Update existing submission if pending or rejected
-      const subId = existing[0].id;
-      await pool.query(
-        'UPDATE submissions SET submissionText = ?, status = "pending", feedback = NULL, updatedAt = ? WHERE id = ?',
-        [submissionText.trim(), now, subId]
-      );
-      return res.json({ message: 'Submission updated successfully!', submissionId: subId });
-    }
-
     const newSub = {
       id: uuidv4(),
       activityId,
@@ -105,12 +65,8 @@ router.post('/', auth, async (req, res) => {
       updatedAt: now
     };
 
-    await pool.query(
-      'INSERT INTO submissions (id, activityId, studentId, submissionText, status, feedback, submittedAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [newSub.id, newSub.activityId, newSub.studentId, newSub.submissionText, newSub.status, newSub.feedback, newSub.submittedAt, newSub.updatedAt]
-    );
-
-    res.status(201).json({ message: 'Document submitted successfully for review!', submission: newSub });
+    const saved = await db.saveSubmission(newSub);
+    res.status(201).json({ message: 'Document submitted successfully for review!', submission: saved });
   } catch (error) {
     console.error('Create submission error:', error);
     res.status(500).json({ message: 'Error submitting proof' });
@@ -125,19 +81,15 @@ router.post('/:id/review', auth, adminOrFaculty, async (req, res) => {
       return res.status(400).json({ message: 'Status must be approved or rejected' });
     }
 
-    const pool = require('../mysql');
-    const [subs] = await pool.query('SELECT * FROM submissions WHERE id = ?', [req.params.id]);
-    if (subs.length === 0) {
+    const sub = await db.getSubmissionById(req.params.id);
+    if (!sub) {
       return res.status(404).json({ message: 'Submission record not found' });
     }
 
-    const sub = subs[0];
     const now = new Date().toISOString();
+    const finalFeedback = feedback || (status === 'approved' ? 'Approved & RP Awarded' : 'Rejected');
 
-    await pool.query(
-      'UPDATE submissions SET status = ?, feedback = ?, updatedAt = ? WHERE id = ?',
-      [status, feedback || (status === 'approved' ? 'Approved & RP Awarded' : 'Rejected'), now, sub.id]
-    );
+    await db.updateSubmissionStatus(sub.id, status, finalFeedback, now);
 
     // If approved, automatically award RP to student!
     if (status === 'approved') {
