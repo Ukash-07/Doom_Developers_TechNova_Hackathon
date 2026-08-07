@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 import {
   ShieldCheck, BookOpen, Users, MessageSquare, Plus, Award,
-  Send, Edit, CheckCircle, Clock, Cpu, Trophy, BadgeCheck, FileCheck, ExternalLink, Check, X, Search, Filter
+  Send, Edit, CheckCircle, Clock, Cpu, Trophy, BadgeCheck, FileCheck, ExternalLink, Check, X, Search, Filter, Download, FileText
 } from 'lucide-react';
 
 // Map responsibility to display labels and theme color
@@ -52,6 +52,7 @@ export default function FacultyDashboard() {
   const [queries, setQueries] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentHistory, setSelectedStudentHistory] = useState([]);
   const [editingMarksId, setEditingMarksId] = useState(null);
   const [newBaseMarks, setNewBaseMarks] = useState('');
 
@@ -184,9 +185,143 @@ export default function FacultyDashboard() {
       const res = await fetch(`/api/reports/student/${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setSelectedStudent(await res.json());
-      else showToast('Failed to load student details', 'error');
-    } catch { showToast('Network error', 'error'); }
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedStudent(data);
+        setSelectedStudentHistory(data.history || []);
+      } else {
+        showToast('Failed to load student details', 'error');
+      }
+    } catch {
+      showToast('Network error', 'error');
+    }
+  };
+
+  const handleDownloadPdf = (student, history = []) => {
+    if (!student) return;
+    const rollNo = student.rollNo || student.email.split('@')[0].toUpperCase();
+    const rpBonus = student.rpBonus !== undefined ? student.rpBonus : (student.currentBalance > 0 ? Number(((student.currentBalance / 450) * 11).toFixed(1)) : 0);
+    const rankVal = student.rank || 1;
+    const badgeVal = student.badge || 'Participant';
+
+    const reportHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Academic_Report_${rollNo}_${student.name.replace(/\s+/g, '_')}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
+          body { font-family: 'Outfit', 'Segoe UI', sans-serif; padding: 40px; color: #0f172a; background: #ffffff; line-height: 1.5; margin: 0; }
+          .header { text-align: center; border-bottom: 3px solid #0284c7; padding-bottom: 20px; margin-bottom: 30px; }
+          .header h1 { margin: 0; font-size: 24px; color: #0284c7; text-transform: uppercase; letter-spacing: 1px; }
+          .header p { margin: 6px 0 0; color: #64748b; font-size: 14px; font-weight: 600; }
+          .badge-tag { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-top: 10px; text-transform: uppercase; }
+          .info-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          .info-table td { padding: 14px 18px; border: 1px solid #cbd5e1; font-size: 15px; }
+          .info-table td.label { font-weight: 700; background: #f8fafc; color: #334155; width: 38%; }
+          .info-table td.value { font-weight: 600; color: #0f172a; }
+          .rp-text { color: #0284c7; font-weight: 800; font-size: 18px; }
+          .marks-text { color: #059669; font-weight: 800; font-size: 20px; }
+          .section-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; color: #1e293b; }
+          .ledger-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+          .ledger-table th { background: #f1f5f9; padding: 10px 14px; border: 1px solid #cbd5e1; text-align: left; font-size: 13px; font-weight: 700; }
+          .ledger-table td { padding: 10px 14px; border: 1px solid #cbd5e1; font-size: 13px; }
+          .footer { margin-top: 60px; display: flex; justify-content: space-between; text-align: center; font-size: 13px; color: #475569; }
+          .signature-line { border-top: 1.5px dashed #94a3b8; width: 220px; padding-top: 8px; font-weight: 600; }
+          @media print {
+            body { padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>College of Engineering & Technology</h1>
+          <p>Student Academic Reward Points & Internal Marks Report</p>
+          <span class="badge-tag">OFFICIAL ACADEMIC REPORT CARD</span>
+        </div>
+
+        <table class="info-table">
+          <tr>
+            <td class="label">Student Name:</td>
+            <td class="value">${student.name}</td>
+          </tr>
+          <tr>
+            <td class="label">Roll Number:</td>
+            <td class="value"><strong style="color: #0284c7;">${rollNo}</strong></td>
+          </tr>
+          <tr>
+            <td class="label">Mail ID (Email):</td>
+            <td class="value">${student.email}</td>
+          </tr>
+          <tr>
+            <td class="label">Balance Points:</td>
+            <td class="value rp-text">${student.currentBalance} RP</td>
+          </tr>
+          <tr>
+            <td class="label">Internal Marks (out of 11):</td>
+            <td class="value marks-text">${rpBonus} / 11 Marks</td>
+          </tr>
+          <tr>
+            <td class="label">Class Standing Rank:</td>
+            <td class="value">Rank #${rankVal} (${badgeVal} Badge)</td>
+          </tr>
+        </table>
+
+        <div class="section-title">Reward Points Ledger & Activity History</div>
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Activity Description</th>
+              <th style="text-align: right;">Points Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${history.length === 0 ? '<tr><td colSpan="3" style="text-align:center; color:#64748b;">No activity records logged.</td></tr>' : 
+              history.map(h => `
+                <tr>
+                  <td>${new Date(h.createdAt).toLocaleDateString()}</td>
+                  <td>${h.description || 'Activity RP Credit'}</td>
+                  <td style="text-align: right; font-weight: 800; color: ${h.points > 0 ? '#059669' : '#dc2626'}">
+                    ${h.points > 0 ? '+' + h.points : h.points} RP
+                  </td>
+                </tr>
+              `).join('')
+            }
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <div class="signature-line">Faculty Lead Signature</div>
+          <div class="signature-line">Head of Department / Admin</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    let iframe = document.getElementById('faculty-report-print-iframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'faculty-report-print-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(reportHtml);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
   };
 
   const handleSaveMarks = async (studentId) => {
@@ -583,150 +718,131 @@ export default function FacultyDashboard() {
               <div style={{ marginBottom: '24px' }}>
                 <h2 style={{ fontSize: '2rem', fontWeight: 800 }}>Student Roster & Reports</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                  Overview of all registered students. Click any student to view their full performance report.
+                  Overview of all registered students, overall points standing, and baseline exam marks. Click any student profile to open their full report.
                 </p>
               </div>
 
-              {selectedStudent ? (
-                <div className="glass-panel animate-fade-in">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedStudent.name}</h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>{selectedStudent.email} • {selectedStudent.year}</p>
+              {/* Roster list */}
+              <div className="glass-panel">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
+                  <Users size={22} style={{ color: 'var(--color-primary)' }} />
+                  <h3>Registered Students</h3>
+                </div>
+
+                {/* Search and Filter Control Bar */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  marginBottom: '20px',
+                  background: 'rgba(0, 0, 0, 0.02)',
+                  border: '1px solid var(--border-glass)',
+                  borderRadius: '12px',
+                  padding: '16px'
+                }}>
+                  {/* Left: Search input for Name / Roll No */}
+                  <div style={{ flex: '1 1 280px', display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+                    <Search size={18} style={{ color: 'var(--text-muted)', position: 'absolute', left: '12px' }} />
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Search by Name, Roll No, or Email..."
+                      value={rosterSearchQuery}
+                      onChange={e => setRosterSearchQuery(e.target.value)}
+                      style={{ paddingLeft: '38px', fontSize: '0.88rem', width: '100%' }}
+                    />
+                  </div>
+
+                  {/* Right: RP Filter Dropdown & Threshold Input */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        RP Filter:
+                      </label>
+                      <select
+                        className="form-select"
+                        value={rpFilterMode}
+                        onChange={e => setRpFilterMode(e.target.value)}
+                        style={{ fontSize: '0.85rem', padding: '8px 12px', width: 'auto', background: '#ffffff', color: '#0f172a' }}
+                      >
+                        <option value="all">All Students</option>
+                        <option value="lessThan">Reward Points Less Than (&lt;)</option>
+                        <option value="greaterThan">Reward Points &ge;</option>
+                      </select>
                     </div>
-                    <button className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                      onClick={() => setSelectedStudent(null)}>
-                      ← Back to Roster
-                    </button>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                    {[
-                      { label: 'Rank', value: `#${selectedStudent.rank}`, color: cfg.color },
-                      { label: 'Total Earned', value: `${selectedStudent.totalEarned} RP`, color: '#10b981' },
-                      { label: 'Current Balance', value: `${selectedStudent.currentBalance} RP`, color: '#f59e0b' },
-                      { label: 'Final Marks', value: `${selectedStudent.finalMarks}/100`, color: '#6366f1' },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} style={{
-                        background: 'rgba(0,0,0,0.015)', border: '1px solid var(--border-glass)',
-                        borderRadius: '10px', padding: '16px', textAlign: 'center'
-                      }}>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 800, color }}>{value}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{label}</div>
+
+                    {rpFilterMode !== 'all' && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          Limit:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          placeholder="e.g. 50"
+                          value={maxRpThreshold}
+                          onChange={e => setMaxRpThreshold(e.target.value)}
+                          style={{ width: '90px', padding: '8px 12px', fontSize: '0.85rem' }}
+                        />
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>RP</span>
                       </div>
-                    ))}
-                  </div>
-                  <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px' }}>Recent RP History</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {selectedStudent.history.slice(0, 10).map(h => (
-                      <div key={h.id} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '10px 14px', borderRadius: '8px',
-                        background: h.points > 0 ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)',
-                        border: `1px solid ${h.points > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}`
-                      }}>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-bright)' }}>{h.description}</span>
-                        <span style={{
-                          fontWeight: 700, fontSize: '0.9rem',
-                          color: h.points > 0 ? '#10b981' : '#ef4444'
-                        }}>
-                          {h.points > 0 ? `+${h.points}` : h.points} RP
-                        </span>
-                      </div>
-                    ))}
+                    )}
+
+                    {(rosterSearchQuery || rpFilterMode !== 'all' || maxRpThreshold !== '') && (
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => { setRosterSearchQuery(''); setRpFilterMode('all'); setMaxRpThreshold(''); }}
+                        style={{ padding: '7px 12px', fontSize: '0.78rem', border: '1px solid #cbd5e1' }}
+                      >
+                        Clear Filters
+                      </button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="glass-panel">
-                  {/* Search and Filter Control Bar */}
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '16px',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '20px',
-                    background: 'rgba(0, 0, 0, 0.02)',
-                    border: '1px solid var(--border-glass)',
-                    borderRadius: '12px',
-                    padding: '16px'
-                  }}>
-                    {/* Left: Search input for Name / Roll No */}
-                    <div style={{ flex: '1 1 280px', display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-                      <Search size={18} style={{ color: 'var(--text-muted)', position: 'absolute', left: '12px' }} />
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Search by Name, Roll No, or Email..."
-                        value={rosterSearchQuery}
-                        onChange={e => setRosterSearchQuery(e.target.value)}
-                        style={{ paddingLeft: '38px', fontSize: '0.88rem', width: '100%' }}
-                      />
-                    </div>
 
-                    {/* Right: RP Filter Dropdown & Threshold Input */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Filter size={16} style={{ color: 'var(--text-muted)' }} />
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          RP Filter:
-                        </label>
-                        <select
-                          className="form-select"
-                          value={rpFilterMode}
-                          onChange={e => setRpFilterMode(e.target.value)}
-                          style={{ fontSize: '0.85rem', padding: '8px 12px', width: 'auto', background: '#ffffff', color: '#0f172a' }}
-                        >
-                          <option value="all">All Students</option>
-                          <option value="lessThan">Reward Points Less Than (&lt;)</option>
-                          <option value="greaterThan">Reward Points &ge;</option>
-                        </select>
-                      </div>
+                <div className="table-container">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '80px' }}>Rank</th>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>RP Balance</th>
+                        <th>Internal Marks (out of 11)</th>
+                        <th style={{ textAlign: 'right' }}>Report</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.filter(s => {
+                        const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
+                        const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
+                        const q = rosterSearchQuery.toLowerCase().trim();
 
-                      {rpFilterMode !== 'all' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            Limit:
-                          </label>
-                          <input
-                            type="number"
-                            className="form-input"
-                            placeholder="e.g. 50"
-                            value={maxRpThreshold}
-                            onChange={e => setMaxRpThreshold(e.target.value)}
-                            style={{ width: '90px', padding: '8px 12px', fontSize: '0.85rem' }}
-                          />
-                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>RP</span>
-                        </div>
-                      )}
+                        const matchesSearch = !q || 
+                          studentName.toLowerCase().includes(q) || 
+                          s.email.toLowerCase().includes(q) || 
+                          rollCode.toLowerCase().includes(q);
 
-                      {(rosterSearchQuery || rpFilterMode !== 'all' || maxRpThreshold !== '') && (
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          onClick={() => { setRosterSearchQuery(''); setRpFilterMode('all'); setMaxRpThreshold(''); }}
-                          style={{ padding: '7px 12px', fontSize: '0.78rem', border: '1px solid #cbd5e1' }}
-                        >
-                          Clear Filters
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                        let matchesRp = true;
+                        if (rpFilterMode === 'lessThan' && maxRpThreshold !== '') {
+                          matchesRp = Number(s.currentBalance) < Number(maxRpThreshold);
+                        } else if (rpFilterMode === 'greaterThan' && maxRpThreshold !== '') {
+                          matchesRp = Number(s.currentBalance) >= Number(maxRpThreshold);
+                        }
 
-                  <div className="table-container">
-                    <table className="data-table">
-                      <thead>
+                        return matchesSearch && matchesRp;
+                      }).length === 0 ? (
                         <tr>
-                          <th>Student Name</th>
-                          <th>Rank & Badge</th>
-                          <th>Total RP Earned</th>
-                          <th>Current Balance</th>
-                          <th>Base Marks</th>
-                          <th>Final Marks</th>
-                          <th style={{ textAlign: 'right' }}>Actions</th>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                            No student records match the selected search criteria or RP filter threshold.
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {students.filter(s => {
+                      ) : (
+                        students.filter(s => {
                           const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
                           const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
                           const q = rosterSearchQuery.toLowerCase().trim();
@@ -744,33 +860,30 @@ export default function FacultyDashboard() {
                           }
 
                           return matchesSearch && matchesRp;
-                        }).length === 0 ? (
-                          <tr>
-                            <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-                              No student records match the selected search criteria or RP filter threshold.
-                            </td>
-                          </tr>
-                        ) : (
-                          students.filter(s => {
-                            const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
-                            const studentName = s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim();
-                            const q = rosterSearchQuery.toLowerCase().trim();
+                        }).map(s => {
+                          const rollCode = s.rollNo || s.email.split('@')[0].toUpperCase();
 
-                            const matchesSearch = !q || 
-                              studentName.toLowerCase().includes(q) || 
-                              s.email.toLowerCase().includes(q) || 
-                              rollCode.toLowerCase().includes(q);
-
-                            let matchesRp = true;
-                            if (rpFilterMode === 'lessThan' && maxRpThreshold !== '') {
-                              matchesRp = Number(s.currentBalance) < Number(maxRpThreshold);
-                            } else if (rpFilterMode === 'greaterThan' && maxRpThreshold !== '') {
-                              matchesRp = Number(s.currentBalance) >= Number(maxRpThreshold);
-                            }
-
-                            return matchesSearch && matchesRp;
-                          }).map(s => (
+                          return (
                             <tr key={s.studentId}>
+                              <td>
+                                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: s.rank <= 3 ? '#0284c7' : 'var(--text-bright)' }}>
+                                  #{s.rank}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ 
+                                  fontFamily: 'Outfit, monospace', 
+                                  fontWeight: 700, 
+                                  fontSize: '0.85rem', 
+                                  color: '#0284c7', 
+                                  background: 'rgba(2, 132, 199, 0.08)', 
+                                  border: '1px solid rgba(2, 132, 199, 0.2)',
+                                  padding: '3px 8px', 
+                                  borderRadius: '6px' 
+                                }}>
+                                  {rollCode}
+                                </span>
+                              </td>
                               <td>
                                 <div style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: '0.95rem' }}>
                                   {s.name.replace(/^Student\s+S\d+\s*\(([^)]+)\)/i, '$1').replace(/^Student\s+S\d+\s*/i, '').trim()}
@@ -778,48 +891,36 @@ export default function FacultyDashboard() {
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.email}</div>
                               </td>
                               <td>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>#{s.rank}</span>
-                                  <span className={`badge-ui badge-${s.badge.toLowerCase()}`}>{s.badge}</span>
+                                <div style={{ fontWeight: 800, color: '#0284c7', fontSize: '0.95rem' }}>
+                                  {s.currentBalance} RP
                                 </div>
                               </td>
-                              <td><span style={{ fontWeight: 700, color: cfg.color }}>{s.totalEarned} RP</span></td>
-                              <td><span style={{ fontWeight: 600 }}>{s.currentBalance} RP</span></td>
                               <td>
-                                {editingMarksId === s.studentId ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <input type="number" className="form-input"
-                                      style={{ width: '60px', padding: '4px 8px', fontSize: '0.85rem' }}
-                                      value={newBaseMarks} onChange={e => setNewBaseMarks(e.target.value)} />
-                                    <button className="btn btn-primary"
-                                      style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                                      onClick={() => handleSaveMarks(s.studentId)}>Save</button>
-                                  </div>
-                                ) : (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span>{s.baseMarks} / 90</span>
-                                    <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                                      onClick={() => { setEditingMarksId(s.studentId); setNewBaseMarks(s.baseMarks); }}>
-                                      <Edit size={14} />
-                                    </button>
-                                  </div>
-                                )}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <strong style={{ fontSize: '1.05rem', color: '#059669', fontWeight: 800 }}>
+                                    {s.rpBonus !== undefined ? s.rpBonus : (s.currentBalance > 0 ? 11 : 0)} / 11
+                                  </strong>
+                                </div>
                               </td>
-                              <td><strong style={{ color: 'var(--color-success)' }}>{s.finalMarks} / 100</strong></td>
                               <td style={{ textAlign: 'right' }}>
-                                <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                                  onClick={() => handleViewStudent(s.studentId)}>
-                                  View Report
-                                </button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                  <button 
+                                    className="btn btn-outline"
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                    onClick={() => handleViewStudent(s.studentId)}
+                                  >
+                                    View Report
+                                  </button>
+                                </div>
                               </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -1020,6 +1121,134 @@ export default function FacultyDashboard() {
           )}
         </div>
       </div>
+
+      {/* STUDENT REPORT OVERLAY MODAL (Full Report popup) */}
+      {selectedStudent && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div className="glass-panel animate-fade-in" style={{
+            width: '100%',
+            maxWidth: '720px',
+            maxHeight: '88vh',
+            overflowY: 'auto',
+            background: '#ffffff',
+            border: '1.5px solid #cbd5e1',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+            padding: '28px',
+            borderRadius: '16px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <FileText size={22} style={{ color: '#0284c7' }} />
+                  <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Official Academic Report</h2>
+                </div>
+                <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>Individual Performance Card & Points History</p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => handleDownloadPdf(selectedStudent, selectedStudentHistory)}
+                  style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  <Download size={16} />
+                  <span>Download Report (PDF)</span>
+                </button>
+                <button 
+                  className="btn btn-outline" 
+                  onClick={() => setSelectedStudent(null)}
+                  style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#475569', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* Profile Statistics Table Grid */}
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '18px',
+              marginBottom: '24px'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '0.9rem' }}>
+                <div style={{ padding: '8px 12px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600, display: 'block' }}>Student Name:</span>
+                  <strong style={{ color: '#0f172a', fontSize: '1rem' }}>{selectedStudent.name}</strong>
+                </div>
+
+                <div style={{ padding: '8px 12px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600, display: 'block' }}>Roll Number:</span>
+                  <strong style={{ color: '#0284c7', fontSize: '1rem' }}>{selectedStudent.rollNo || selectedStudent.email.split('@')[0].toUpperCase()}</strong>
+                </div>
+
+                <div style={{ padding: '8px 12px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600, display: 'block' }}>Mail ID (Email):</span>
+                  <strong style={{ color: '#0f172a', fontSize: '0.9rem' }}>{selectedStudent.email}</strong>
+                </div>
+
+                <div style={{ padding: '8px 12px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600, display: 'block' }}>Balance Points:</span>
+                  <strong style={{ color: '#0284c7', fontSize: '1.05rem' }}>{selectedStudent.currentBalance} RP</strong>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', padding: '12px', background: 'rgba(5, 150, 105, 0.06)', borderRadius: '8px', border: '1px solid rgba(5, 150, 105, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#047857', fontWeight: 700 }}>Internal Marks (out of 11):</span>
+                  <strong style={{ fontSize: '1.2rem', color: '#059669', fontWeight: 800 }}>
+                    {selectedStudent.rpBonus !== undefined ? selectedStudent.rpBonus : (selectedStudent.currentBalance > 0 ? 11 : 0)} / 11 Marks
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Ledger logs */}
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Points History & Activity Logs</h3>
+            {(!selectedStudentHistory || selectedStudentHistory.length === 0) ? (
+              <p style={{ color: '#64748b', fontSize: '0.85rem', padding: '10px 0', textAlign: 'center' }}>No points transactions found for this student.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {selectedStudentHistory.map(h => (
+                  <div 
+                    key={h.id} 
+                    style={{
+                      display: 'flex',
+                      justify: 'space-between',
+                      alignItems: 'center',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, color: '#1e293b' }}>{h.description || 'Activity RP Credit'}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{new Date(h.createdAt).toLocaleDateString()}</div>
+                    </div>
+                    <span style={{ fontWeight: 800, color: h.points > 0 ? '#059669' : '#dc2626' }}>
+                      {h.points > 0 ? `+${h.points}` : h.points} RP
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
