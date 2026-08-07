@@ -745,7 +745,7 @@ export default function StudentDashboard() {
                   </div>
                   <div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Class Average RP</span>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{report.averageRp} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pts</span></h3>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{report.averageRp ?? 0} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pts</span></h3>
                   </div>
                 </div>
 
@@ -755,7 +755,7 @@ export default function StudentDashboard() {
                   </div>
                   <div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Class Standing</span>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>#{report.rank} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>of {report.totalStudents}</span></h3>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>#{report.rank || 1} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>of {report.totalStudents || leaderboard.length || 1}</span></h3>
                   </div>
                 </div>
 

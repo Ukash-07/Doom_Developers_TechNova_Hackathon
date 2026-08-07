@@ -80,6 +80,8 @@ async function compileAllStudentReports() {
       totalEarned: b.totalEarned,
       currentBalance: b.currentBalance,
       rank,
+      totalStudents: list.length,
+      averageRp,
       rpStatus,
       baseMarks: b.baseMarks,
       rpBonus: Number(rpBonus.toFixed(2)),
